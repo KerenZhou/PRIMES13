@@ -11,5 +11,5 @@ run: LazySkipListTester
 	java $<
 
 .PHONY: update_and_run
-run: git pull
+update_and_run: git pull
 	run
