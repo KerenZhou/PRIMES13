@@ -54,7 +54,10 @@ public class RandomSource {
 			}
 		} catch(IOException ex) {
 			System.out.println("Input error");
-			System.exit(0);
+			System.out.println("Generating new random");
+			generate();
+			System.out.println("Saving");
+			save(fname);
 		}
 	}
 	
