@@ -1,11 +1,25 @@
 public class LazySkipListTester {
-	final static int socketSize = 6;
+	final static int[] TOM = { 6, 48 };
+	final static int[] BEN = { 10, 80 };
 	final static int maxThreads = Runtime.getRuntime().availableProcessors();
+	final static int socketSize;
 	static int numThreads = 0;
 	static int runTimes;
 	private static LazySkipList skipList;
 	private static long startTime;
 	private static long endTime;
+	
+	static {
+		int size;
+		if(maxThreads == TOM[1]) {
+			size = TOM[0];
+		} else if(maxThreads == BEN[1]) {
+			size = BEN[0];
+		} else {
+			size = 1;
+		}
+		socketSize = size;
+	}
 	
 	private static class TestThread implements Runnable {
 		int id;
