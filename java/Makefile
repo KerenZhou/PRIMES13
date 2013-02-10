@@ -9,3 +9,7 @@ LazySkipListTester: $(SOURCES)
 .PHONY: run
 run: LazySkipListTester
 	java $<
+
+.PHONY: update_and_run
+run: git pull
+	run
