@@ -6,7 +6,7 @@ public class LazySkipListTester {
 	private static long endTime;
 	
 	private static class TestThread implements Runnable {
-    int id;
+		int id;
 		public TestThread(int id) {
 			this.id = id;
 		}
