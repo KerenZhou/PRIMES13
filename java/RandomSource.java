@@ -53,6 +53,7 @@ public class RandomSource {
 					throw new IOException("Invalid input");
 				}
 			}
+			if(index < pool_size) throw new IOException("Not enough input");
 		} catch(IOException ex) {
 			System.out.println("Input error");
 			System.out.println("Generating new random");
