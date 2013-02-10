@@ -7,9 +7,9 @@ public class LazySkipListTester {
 	
 	private static class TestThread implements Runnable {
     int id;
-    public TestThread(int id) {
-		  this.id = id;
-    }
+		public TestThread(int id) {
+			this.id = id;
+		}
 		public void run() {
 			while(System.nanoTime() - startTime < 0) ;
 			for(int i = 0; i < runTimes; i++) {
