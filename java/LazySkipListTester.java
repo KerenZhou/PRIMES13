@@ -26,7 +26,7 @@ public class LazySkipListTester {
 		while(numThreads < maxThreads) {
 			numThreads += socketSize;
 			runTimes = RandomSource.pool_size / numThreads;
-			System.out.print(numThreads + " ");
+			System.out.print(runTimes + " " + numThreads + " ");
 			Thread[] workers = new Thread[numThreads];
 			startTime = System.nanoTime() + 1000000000L;
 			skipList = new LazySkipList();
