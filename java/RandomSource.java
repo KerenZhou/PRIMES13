@@ -2,7 +2,7 @@ import java.util.*;
 import java.io.*;
 
 public class RandomSource {
-	public static final int pool_size = 1000000; 
+	public static int pool_size = 1000000; 
 	public static final long[] randomSource = new long[pool_size];
 	private static boolean __initialized___ = false; 
 	private static Random random = new Random();
