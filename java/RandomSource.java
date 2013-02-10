@@ -1,7 +1,7 @@
 import java.util.UUID;
 
 public class RandomSource {
-	public static final long pool_size = 10000000; 
+	public static final int pool_size = 10000000; 
 	public static final String[] randomSource = new String[pool_size];
 	private static int index = 0;
 	private static boolean __initialized___ = false; 
