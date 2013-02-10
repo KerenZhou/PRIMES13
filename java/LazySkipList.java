@@ -19,7 +19,7 @@ public class LazySkipList {
 		final Node next[];
 		volatile boolean marked = false;
 		volatile boolean fullyLinked = false;
-		private long topLevel;
+		private int topLevel;
 		
 		public Node(long key) {
 			this.key = key;
