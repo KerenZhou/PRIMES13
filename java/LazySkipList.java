@@ -4,8 +4,8 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class LazySkipList {
 	static final int MAX_LEVEL = 6;
-	final Node head = new Node(Integer.MIN_VALUE);
-	final Node tail = new Node(Integer.MAX_VALUE);
+	final Node head = new Node(Long.MIN_VALUE);
+	final Node tail = new Node(Long.MAX_VALUE);
 	
 	public LazySkipList() {
 		for(int i = 0; i < head.next.length; i++) {
@@ -15,20 +15,20 @@ public class LazySkipList {
 	
 	private static class Node {
 		final Lock lock = new ReentrantLock();
-		final int key;
+		final long key;
 		final Node next[];
 		volatile boolean marked = false;
 		volatile boolean fullyLinked = false;
-		private int topLevel;
+		private long topLevel;
 		
-		public Node(int key) {
+		public Node(long key) {
 			this.key = key;
 			next = new Node[MAX_LEVEL + 1];
 			topLevel = MAX_LEVEL;
 		}
 		
-		public Node(String x, int height) {
-			key = x.hashCode();
+		public Node(long x, int height) {
+			key = x;
 			next = new Node[height + 1];
 			topLevel = height;
 		}
@@ -42,8 +42,7 @@ public class LazySkipList {
 		}
 	}
 	
-	public int find(String x, Node[] preds, Node[] succs) {
-		int key = x.hashCode();
+	public int find(long key, Node[] preds, Node[] succs) {
 		int found = -1;
 		Node pred = head;
 		for(int level = MAX_LEVEL; level >= 0; level--) {
@@ -60,7 +59,7 @@ public class LazySkipList {
 		return found;
 	}
 	
-	public boolean add(String x) {
+	public boolean add(long x) {
 		int topLevel = randomLevel();
 		Node[] preds = new Node[MAX_LEVEL + 1];
 		Node[] succs = new Node[MAX_LEVEL + 1];
@@ -101,7 +100,7 @@ public class LazySkipList {
 		}
 	}
 	
-	boolean remove(String x) {
+	boolean remove(long x) {
 		Node victim = null;
 		boolean isMarked = false;
 		int topLevel = -1;
@@ -149,7 +148,7 @@ public class LazySkipList {
 		}
 	}
 	
-	public boolean contains(String x) {
+	public boolean contains(long x) {
 		Node[] preds = new Node[MAX_LEVEL + 1];
 		Node[] succs = new Node[MAX_LEVEL + 1];
 		int found = find(x, preds, succs);

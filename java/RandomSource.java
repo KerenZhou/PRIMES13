@@ -42,6 +42,7 @@ public class RandomSource {
 			int index = 0;
 			int character = 0;
 			while((character = storageFile.read()) != -1) {
+				if(index >= pool_size) break;
 				if('0' <= character && character <= '9')
 					number = number * 10 + character - '0';
 				else if(character == '\n' || character == '\r') {
