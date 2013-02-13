@@ -1,4 +1,4 @@
-SOURCES = $(wildcard *.java)
+SOURCES = $(wildcard primes13/*.java)
 
 all: LazySkipListTester
 
@@ -8,4 +8,4 @@ LazySkipListTester: $(SOURCES)
 
 .PHONY: run
 run: LazySkipListTester
-	java $<
+	java -cp . primes13.LazySkipListTester

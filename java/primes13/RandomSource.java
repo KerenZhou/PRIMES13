@@ -1,11 +1,13 @@
+package primes13;
+
 import java.util.*;
 import java.io.*;
 
 public class RandomSource {
-	public static final int pool_size = 10000000; 
+	public static final int pool_size = 10000000;
 	public static final long[] randomSource = new long[pool_size];
-	private static boolean __initialized___ = false; 
-	private static Random random = new Random();
+	public static boolean __initialized___ = false; 
+	public static Random random = new Random();
 
 	public static class NoMoreEntropyException extends RuntimeException {}
 	
