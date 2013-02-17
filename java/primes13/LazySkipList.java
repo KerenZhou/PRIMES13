@@ -5,7 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class LazySkipList {
 
-    static final int MAX_LEVEL = 6;
+    static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
     final Node tail = new Node(Long.MAX_VALUE);
 
