@@ -15,7 +15,7 @@ public class LazySkipList {
         }
     }
 
-    private static class Node {
+    public static class Node {
 
         final Lock lock = new ReentrantLock();
         final long key;
@@ -111,7 +111,7 @@ public class LazySkipList {
                 victim = succs[lFound];
             }
             if (isMarked
-                    | (lFound != -1
+                    || (lFound != -1
                     && (victim.fullyLinked
                     && victim.topLevel == lFound
                     && !victim.marked))) {

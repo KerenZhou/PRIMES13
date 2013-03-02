@@ -20,7 +20,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-public class LazySkipListTester {
+public class LazySkipListTester2 {
     final static int[] TOM = {6, 48};
     final static int[] BEN = {10, 80};
     final static int maxThreads = Runtime.getRuntime().availableProcessors();
@@ -30,7 +30,6 @@ public class LazySkipListTester {
     private static LazySkipList skipList = new LazySkipList();
 
     private static class TestThread implements Runnable {
-
         int id;
         long element;
         long[] iter;
@@ -45,14 +44,49 @@ public class LazySkipListTester {
         public void run() {
             while (!shouldRun) ;
             long iters = 0;
+            long x = -5 >>> 1;
             
             for (; shouldRun; iters++) {
-                element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                skipList.add(element);
-                skipList.contains(element);
-                skipList.remove(element);
+                x = (1103515245L * x + 12345L) & (RandomSource.m - 1);
+                skipList.contains(x);
             }
             iter[id] = iters;
+        }
+    }
+    
+    private static class TestThread2 implements Runnable {
+        int id;
+        long element;
+        long[] add;
+        long[] rem;
+        RandomSource rs;
+
+        public TestThread2(int id, long[] add, long rem[]) {
+            this.id = id;
+            this.element = id;
+            this.add = add;
+            this.rem = rem;
+        }
+        
+        public void run() {
+            while (!shouldRun) ;
+            int iters = 100;
+            for(int i = 0; i < iters; i++) {
+                long x = element;
+                long start = System.nanoTime();
+                for (int j = 0; j < 1000; j++) {
+                    element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
+                    skipList.add(element);
+                }
+                add[id] += (System.nanoTime() - start) / iters;
+                element = x;
+                start = System.nanoTime();
+                for (int j = 0; j < 1000; j++) {
+                    element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
+                    skipList.add(element);
+                }
+                rem[id] += (System.nanoTime() - start) / iters;
+            }
         }
     }
     
@@ -116,6 +150,7 @@ public class LazySkipListTester {
             } else if (maxThreads == BEN[1]) {
                 size = BEN[0];
             }
+            size = 1;
         } finally {
             socketSize = size;
         }
@@ -132,25 +167,9 @@ public class LazySkipListTester {
         } catch(Exception ex) {}
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
-        for(int i = 0; i < 1000000; i++) {
+        for(int i = 0; i < 10000000; i++) {
             skipList.add(rs.next());
         }
-        // Initialize plots
-        XYSeriesCollection rate_d = new XYSeriesCollection();
-        XYSeries rate = new XYSeries("Operations/ms");
-        rate_d.addSeries(rate);
-        JFreeChart rate_c = createChart(rate_d, "Rate");
-        
-        XYSeriesCollection speedup_d = new XYSeriesCollection();
-        XYSeries speedup = new XYSeries("Speedup");
-        speedup_d.addSeries(speedup);
-        JFreeChart speedup_c = createChart(speedup_d, "Speedup");
-        
-        XYSeriesCollection efficiency_d = new XYSeriesCollection();
-        XYSeries efficiency = new XYSeries("Efficiency");
-        efficiency_d.addSeries(efficiency);
-        JFreeChart efficiency_c = createChart(efficiency_d, "Efficiency");
-        
         double rate0 = 0; // Starting rate
         Timer endTimer = new Timer(false);
         
@@ -158,12 +177,14 @@ public class LazySkipListTester {
         while (numThreads + socketSize <= maxThreads) {
             numThreads += socketSize;
             try {
-                Runtime.getRuntime().exec("set-cpus -n " + numThreads + " seq");
+                Runtime.getRuntime().exec("sudo /home/am6/mpdev/bin/set-cpus 0-" + (numThreads - 1));
             } catch (IOException ex) {}
             
             // Initialize threads
             Thread[] workers = new Thread[numThreads];
             long[] iter = new long[numThreads];
+            long[] add = new long[numThreads];
+            long[] rem = new long[numThreads];
             for (int i = 0; i < numThreads; i++) {
                 workers[i] = new Thread(new TestThread(i, iter));
                 workers[i].start();
@@ -181,53 +202,43 @@ public class LazySkipListTester {
                     workers[i].join();
                 } catch (InterruptedException e) {}
             }
+            
+            for(int i = 0; i < numThreads; i++) {
+                workers[i] = new Thread(new TestThread2(i, add, rem));
+                workers[i].start();
+            }
+            
+            // Wait until all threads are done
+            for (int i = 0; i < numThreads; i++) {
+                try {
+                    workers[i].join();
+                } catch (InterruptedException e) {}
+            }
+            
             // Get total number of iterations finished
             long totalIters = 0;
+            long addNS = 0, remNS = 0;
             for (int i = 0; i < numThreads; i++) {
                 totalIters += iter[i];
+                addNS += add[i];
+                remNS += rem[i];
             }
             // Calculate rate (iterations / msec)
-            double rate_ = 1.0 * totalIters / (endTime - startTime);
-            // If this is first runthrough, set initial rate
-            if(numThreads == socketSize) rate0 = rate_;
-            // Calculate speedup
-            double speedup_ = rate_ / rate0;
-            // Calculate efficiency
-            double efficiency_ = speedup_ / numThreads;
-            
-            // Add data points to plot
-            rate.add(numThreads, rate_);
-            speedup.add(numThreads, speedup_);
-            efficiency.add(numThreads, efficiency_);
+            double rate_find = 1.0 * totalIters / (endTime - startTime);
+            double rate_add = 1.0 * numThreads * 1000 / (addNS / 1000000L);
+            double rate_rem = 1.0 * numThreads * 1000 / (remNS / 1000000L);
             
             // Log data points
-            System.out.printf("{ %d, %.4f, %.4f, %.4f }", numThreads, rate_, speedup_, efficiency_);
+            System.out.printf("{ %d, %.4f, %.4f, %.4f }", numThreads / socketSize, rate_find, rate_add, rate_rem);
             if(numThreads + socketSize <= maxThreads) System.out.print(",");
             System.out.println();
+            System.gc();
         }
         // Stop timer so program can exit
         endTimer.purge();
         endTimer.cancel();
         
         System.out.print("}");
-        
-        // Save charts
-        try {
-            ChartUtilities.saveChartAsPNG(
-                    new File(computername + "-rate-" + date + ".png"),
-                    rate_c, 1280, 720);
-            ChartUtilities.saveChartAsPNG(
-                    new File(computername + "-speedup-" + date + ".png"),
-                    speedup_c, 1280, 720);
-            ChartUtilities.saveChartAsPNG(
-                    new File(computername + "-efficiency-" + date + ".png"),
-                    efficiency_c, 1280, 720);
-        } catch(Exception ex) {}
-        // Re-enable all cpus
-        try {
-            Runtime.getRuntime().exec("set-cpus all");
-        } catch (IOException ex) {}
-        
         // Flush everything to file
         System.out.flush();
         System.out.close();
