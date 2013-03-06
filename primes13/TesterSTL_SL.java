@@ -3,9 +3,10 @@ package primes13;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentSkipListSet;
 
-public class Tester {
-    private static LazySkipList skipList = new LazySkipList();
+public class TesterSTL_SL {
+    private static ConcurrentSkipListSet<Long> skipList = new ConcurrentSkipListSet<Long>();
 
     private static class FindTester implements Runnable {
         int id;
@@ -80,7 +81,6 @@ public class Tester {
         int numThreads = Integer.parseInt(args[1]);
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
-        
         for(int i = 0; i < 1000; i++) {
             skipList.add(rs.next());
         }
