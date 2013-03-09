@@ -108,14 +108,14 @@ public class LazySkipList extends AbstractSet<Long> {
         }
     }
 
-    boolean remove(Long x) {
+    public boolean remove(Object x) {
         Node victim = null;
         boolean isMarked = false;
         int topLevel = -1;
         Node[] preds = (Node[]) new Node[MAX_LEVEL + 1];
         Node[] succs = (Node[]) new Node[MAX_LEVEL + 1];
         while (true) {
-            int lFound = find(x, preds, succs);
+            int lFound = find((Long) x, preds, succs);
             if (lFound != -1) {
                 victim = succs[lFound];
             }
@@ -165,7 +165,8 @@ public class LazySkipList extends AbstractSet<Long> {
         }
     }
 
-    public boolean contains(Long key) {
+    public boolean contains(Object x) {
+        long key = (Long) x;
         int found = -1;
         Node pred = head;
         for (int level = MAX_LEVEL; level >= 0; level--) {
