@@ -1,11 +1,14 @@
 package primes13;
 
 import java.io.IOException;
+import java.util.AbstractSet;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Tester {
-    private static LazySkipList skipList = new LazySkipList();
+    private static AbstractSet<Long> skipList;
 
     private static class FindTester implements Runnable {
         int id;
@@ -78,6 +81,15 @@ public class Tester {
     public static void main(String[] args) {
         double runTimeApprox = Double.parseDouble(args[0]);
         int numThreads = Integer.parseInt(args[1]);
+        String className = "";
+        if(args.length > 2) className = args[2];
+        if(className.equalsIgnoreCase("stl_ts")) {
+            skipList = new TreeSet<Long>();
+        } else if(className.equals("stl_sl")) {
+            skipList = new ConcurrentSkipListSet<Long>();
+        } else {
+            skipList = new LazySkipList();
+        }
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
         

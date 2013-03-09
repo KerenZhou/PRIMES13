@@ -21,16 +21,16 @@ def main():
 	res_sl = []
 	res_stl_sl = []
 	
-	cmd = ["java", "-Xmx4G", "-cp", "PRIMES13.jar"]
+	cmd = ["java", "-Xmx16G", "-cp", "PRIMES13.jar"]
 
 	# Test multi-threaded
 	for tcount in thread_counts:
-		sl, stl_sl = runprog(cmd, ["primes13.Tester", "primes13.TesterSTL_SL"], tcount, 0.5)
+		sl, stl_sl = runprog(cmd, "primes13.Tester", tcount, 0.5, ["sl", "stl_sl"])
 		res_sl.append(sl)
 		res_stl_sl.append(stl_sl)
 
 	# Test single-threaded
-	ts = runprog(cmd, ["primes13.TesterSTL_TS"], 1, 0.5)
+	ts = runprog(cmd, "primes13.Tester", 1, 0.5, ["stl_ts"])
 	
 	f = open("res.txt", "w")
 	
@@ -57,14 +57,12 @@ def main():
 		pp.savefig()
 	pp.close()
 
-
-
-def runprog(cmd, main_classes, threads, runtime):
+def runprog(cmd, main_class, threads, runtime, types):
 	print("Starting test with %d thread(s)" % (threads,))
 	ret = []
-	for main_class in main_classes:
-		print(" -> Testing main class: %s" % (main_class,))
-		res = subprocess.check_output(cmd + [main_class, str(runtime), str(threads)])
+	for t in types:
+		print(" -> Testing type class: %s" % (t,))
+		res = subprocess.check_output(cmd + [main_class, str(runtime), str(threads), t])
 		ret.append(tuple([threads] + [float(n) for n in res.decode('ascii').strip().split(',')]))
 	return ret
 

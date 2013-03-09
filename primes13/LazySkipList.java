@@ -1,13 +1,22 @@
 package primes13;
 
+import java.util.AbstractSet;
+import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LazySkipList {
+public class LazySkipList extends AbstractSet<Long> {
 
     static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
     final Node tail = new Node(Long.MAX_VALUE);
+    
+    public Iterator<Long> iterator() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    public int size() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     public LazySkipList() {
         for (int i = 0; i < head.next.length; i++) {
@@ -55,7 +64,7 @@ public class LazySkipList {
         return found;
     }
 
-    public boolean add(long x) {
+    public boolean add(Long x) {
         int topLevel = randomLevel();
         Node[] preds = new Node[MAX_LEVEL + 1];
         Node[] succs = new Node[MAX_LEVEL + 1];
@@ -99,7 +108,7 @@ public class LazySkipList {
         }
     }
 
-    boolean remove(long x) {
+    boolean remove(Long x) {
         Node victim = null;
         boolean isMarked = false;
         int topLevel = -1;
@@ -156,13 +165,22 @@ public class LazySkipList {
         }
     }
 
-    public boolean contains(long x) {
-        Node[] preds = new Node[MAX_LEVEL + 1];
-        Node[] succs = new Node[MAX_LEVEL + 1];
-        int found = find(x, preds, succs);
+    public boolean contains(Long key) {
+        int found = -1;
+        Node pred = head;
+        for (int level = MAX_LEVEL; level >= 0; level--) {
+            Node curr = pred.next[level];
+            while (key > curr.key) {
+                pred = curr;
+                curr = pred.next[level];
+            }
+            if (found == -1 && key == curr.key) {
+                found = level;
+            }
+        }
         return (found != -1
-                && succs[found].fullyLinked
-                && !succs[found].marked);
+                && pred.next[found].fullyLinked
+                && !pred.next[found].marked);
     }
     private static final double P = 0.5;
 
