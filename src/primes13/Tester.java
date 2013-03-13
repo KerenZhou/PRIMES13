@@ -8,7 +8,9 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 public class Tester {
-    private static AbstractSet<Long> skipList;
+    private static AbstractSet<Long> jSkipList = null;
+    private static LazySkipList cSkipList = null;
+    private static boolean useCSkipList = false;
 
     private static class FindTester implements Runnable {
         int id;
@@ -27,7 +29,8 @@ public class Tester {
             
             for (; shouldRun; iters++) {
                 element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                skipList.contains(element);
+                if(useCSkipList) cSkipList.contains(element);
+                else jSkipList.contains(element);
             }
             iter[id] = iters;
         }
@@ -54,14 +57,16 @@ public class Tester {
                 long start = System.nanoTime();
                 for (int j = 0; j < 1000; j++) {
                     element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                    skipList.add(element);
+                    if(useCSkipList) cSkipList.add(element);
+                    else jSkipList.add(element);
                 }
                 add[id] += (System.nanoTime() - start) / iters;
                 element = x;
                 start = System.nanoTime();
                 for (int j = 0; j < 1000; j++) {
                     element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                    skipList.remove(element);
+                    if(useCSkipList) cSkipList.remove(element);
+                    else jSkipList.remove(element);
                 }
                 rem[id] += (System.nanoTime() - start) / iters;
             }
@@ -84,17 +89,19 @@ public class Tester {
         String className = "";
         if(args.length > 2) className = args[2];
         if(className.equalsIgnoreCase("stl_ts")) {
-            skipList = new TreeSet<Long>();
+            jSkipList = new TreeSet<Long>();
         } else if(className.equals("stl_sl")) {
-            skipList = new ConcurrentSkipListSet<Long>();
+            jSkipList = new ConcurrentSkipListSet<Long>();
         } else {
-            skipList = new LazySkipList();
+            cSkipList = new LazySkipList();
+            useCSkipList = true;
         }
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
         
-        for(int i = 0; i < 1000; i++) {
-            skipList.add(rs.next());
+        for(int i = 0; i < 1000000; i++) {
+            if(useCSkipList) cSkipList.add(rs.next());
+            else jSkipList.add(rs.next());
         }
         Timer endTimer = new Timer(false);
         
@@ -123,10 +130,6 @@ public class Tester {
             try {
                 workers[i].join();
             } catch (InterruptedException e) {}
-        }
-
-        for(int i = 0; i < 999000; i++) {
-            skipList.add(rs.next());
         }
         
         Thread thread = null;

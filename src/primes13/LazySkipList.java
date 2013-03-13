@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LazySkipList extends AbstractSet<Long> {
+public class LazySkipList {
 
     static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
@@ -64,7 +64,7 @@ public class LazySkipList extends AbstractSet<Long> {
         return found;
     }
 
-    public boolean add(Long x) {
+    public boolean add(long x) {
         int topLevel = randomLevel();
         Node[] preds = new Node[MAX_LEVEL + 1];
         Node[] succs = new Node[MAX_LEVEL + 1];
@@ -108,7 +108,7 @@ public class LazySkipList extends AbstractSet<Long> {
         }
     }
 
-    public boolean remove(Object x) {
+    public boolean remove(long x) {
         Node victim = null;
         boolean isMarked = false;
         int topLevel = -1;
@@ -165,9 +165,7 @@ public class LazySkipList extends AbstractSet<Long> {
         }
     }
 
-    public boolean contains(Object x) {
-        long key = (Long) x;
-        int found = -1;
+    public boolean contains(long key) {
         Node pred = head;
         for (int level = MAX_LEVEL; level >= 0; level--) {
             Node curr = pred.next[level];
@@ -175,13 +173,11 @@ public class LazySkipList extends AbstractSet<Long> {
                 pred = curr;
                 curr = pred.next[level];
             }
-            if (found == -1 && key == curr.key) {
-                found = level;
+            if (key == curr.key) {
+                return curr.fullyLinked && !curr.marked;
             }
         }
-        return (found != -1
-                && pred.next[found].fullyLinked
-                && !pred.next[found].marked);
+        return false;
     }
     private static final double P = 0.5;
 
