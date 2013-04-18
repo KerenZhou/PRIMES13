@@ -173,18 +173,16 @@ public class LazySkipList {
     private int randomSeed = new Random().nextInt();
     private double P = 0.5;
     private int randomLevel() {
-        /*
         int x = randomSeed;
         x ^= x << 13;
         x ^= x >>> 17;
         randomSeed = x ^= x << 5;
-        if ((x & 0x80000001) != 0) // test highest and lowest bits
+        if ((x & 1) != 0) // test highest and lowest bits
             return 0;
         int level = 1;
         while (((x >>>= 1) & 1) != 0) ++level;
-        return level;
-        */
-        int lvl = (int) (Math.log(1. - rs.nextDouble()) / Math.log(1. - P));
-        return Math.min(lvl, MAX_LEVEL);
+        return Math.min(level, MAX_LEVEL);
+        //int lvl = (int) (Math.log(1. - rs.nextDouble()) / Math.log(1. - P));
+        //return Math.min(lvl, MAX_LEVEL);
     }
 }
