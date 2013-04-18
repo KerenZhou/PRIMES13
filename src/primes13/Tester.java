@@ -42,18 +42,13 @@ public class Tester {
         }
     }
     
-    public static double test(int elements, int size, int numThreads, double runTimeApprox) {
+    public static double test(int elements, int numThreads, double runTimeApprox) {
         LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
+        cSkipList = new LazySkipList();
 
         RandomSource rs = new RandomSource();
-        if(size < elements) {
-            for(int i = 0; i < elements - size; i++) {
-                cSkipList.add(rs.next(), elems);
-            }
-        } else {
-            for(int i = 0; i < size - elements; i++) {
-                cSkipList.remove(rs.next(), elems);
-            }
+        for(int i = 0; i < elements; i++) {
+            cSkipList.add(rs.next(), elems);
         }
 
         // Initialize threads
@@ -102,15 +97,10 @@ public class Tester {
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
         
-        int finalElem = 10;
         int warmupElem = 1000000;
         for(int i = 0; i < warmupElem; i++) {
             long next = rs.next();
             cSkipList.add(next, elems);
-        }
-        rs = new RandomSource(-5);
-        for(int i = 0; i < warmupElem - finalElem; i++) {
-            cSkipList.remove(rs.next(), elems);
         }
         
         int[] threadN = new int[maxThreads / threadStep + 1];
@@ -120,17 +110,14 @@ public class Tester {
         threadN[0] = 1;
         System.out.println(Arrays.toString(threadN));
 
-        int size = 1000;
-
         for(int numThreads : threadN) {
             try {
                 Runtime.getRuntime().exec("sudo set-cpus -n " + numThreads + " seq");
             } catch (IOException ex) {}
             int numElems = 10;
             Double[] rates = new Double[5];
-            for(int i = 0; i < 5; i++) 
-{                rates[i] = test(numElems, size, numThreads, runTimeApprox);
-                size = numElems;
+            for(int i = 0; i < 5; i++) {
+                rates[i] = test(numElems, numThreads, runTimeApprox);
                 numElems *= 10;
             }
             // Log data points
