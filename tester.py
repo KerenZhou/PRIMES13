@@ -6,64 +6,47 @@ pp = PdfPages('res.pdf')
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import sys
+import argparse
 
 machines = {
 	8 : { "name" : platform.node(), "step" : 1 },
-	48 : { "name" : "tom", "step" : 2 },
-	80 : { "name" : "ben",  "step" : 2 }
+	48 : { "name" : "tom", "step" : 6 },
+	80 : { "name" : "ben",  "step" : 10 }
 }
 
+time = 0.25
 def main():
 	cores = multiprocessing.cpu_count()
 	thread_counts = list(range(0, cores + 1, machines[cores]["step"]))[1:]
 	if thread_counts[0] != 1: thread_counts = [1] + thread_counts
 	
-	res_sl = []
-	res_stl_sl = []
-	
-	cmd = ["java", "-Xmx16G", "-cp", "PRIMES13.jar"]
-
-	# Test multi-threaded
-	for tcount in thread_counts:
-		sl, stl_sl = runprog(cmd, "primes13.Tester", tcount, 0.5, ["sl", "stl_sl"])
-		res_sl.append(sl)
-		res_stl_sl.append(stl_sl)
-
-	# Test single-threaded
-	ts = runprog(cmd, "primes13.Tester", 1, 0.5, ["stl_ts"])
-	
+	cmd = ["java", "-Xmx16G", "-Xms16G", "-cp", "PRIMES13.jar"]
+	results = runprog(cmd, "primes13.Tester", time, cores, machines[cores]["step"])
 	f = open("res.txt", "w")
 	
-	print("STL TreeSet", file=f)
-	print(ts[0], file=f)
-
-	print("STL SkipList", file=f)
-	for r in res_stl_sl:
+	print("SkipList", file=f)
+	for r in results:
 		print(r, file=f)
 
-	print("Custom", file=f)
-	for r in res_sl:
-		print(r, file=f)
-
-	labels = ["Lookup", "Add", "Remove"]
-	for i in range(3):
-		fig = plt.figure()
-		p = fig.add_subplot(111)
-		p.set_title(labels[i] + " Rates")
-		p.set_xlabel("threads")
-		p.set_ylabel("ops/ms")
-		p.plot(thread_counts, [r[i + 1] for r in res_stl_sl], c='r')
-		p.plot(thread_counts, [r[i + 1] for r in res_sl], c='g')
-		pp.savefig()
+	x = [1, 2, 3, 4, 5]
+	y = thread_counts
+	fig = plt.figure()
+	p = fig.add_subplot(111, projection="3d")
+	p.set_title("Rates")
+	p.set_xlabel("threads")
+	p.set_ylabel("ops/ms")
+	p.set_zlabel("ops/ms")
+	p.plot([1, 2, 3, 4, 5], thread_counts, [r[i + 1] for r in results])
+	pp.savefig()
 	pp.close()
 
-def runprog(cmd, main_class, threads, runtime, types):
+def runprog(cmd, main_class, runtime, maxThreads, threadStep):
 	print("Starting test with %d thread(s)" % (threads,))
 	ret = []
-	for t in types:
-		print(" -> Testing type class: %s" % (t,))
-		res = subprocess.check_output(cmd + [main_class, str(runtime), str(threads), t])
-		ret.append(tuple([threads] + [float(n) for n in res.decode('ascii').strip().split(',')]))
+	res = subprocess.check_output(cmd + ["-agentlib:hprof=cpu=samples", main_class, str(runtime), str(maxThreads), str(threadStep)])
+	for subRes in res.split("\n")
+		ret.append(tuple([threads] + [float(n) for n in subRes.decode('ascii').strip().split(',')]))
 	return ret
 
 if __name__ == '__main__':

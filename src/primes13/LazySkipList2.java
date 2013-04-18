@@ -1,10 +1,10 @@
 package primes13;
 
-import java.util.concurrent.locks.Lock;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class LazySkipList {
+public class LazySkipList2 {
 
     static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
@@ -12,7 +12,7 @@ public class LazySkipList {
     private RandomSource rs = new RandomSource();
     
     
-    public LazySkipList() {
+    public LazySkipList2() {
         for (int i = 0; i < head.next.length; i++) {
             head.next[i] = tail;
         }
@@ -21,31 +21,31 @@ public class LazySkipList {
     public static class Node {
 
         final Lock lock = new ReentrantLock();
-        final long key;
+        final Long key;
         final Node next[];
         volatile boolean marked = false;
         volatile boolean fullyLinked = false;
         private int topLevel;
 
-        public Node(long key) {
+        public Node(Long key) {
             this.key = key;
             next = new Node[MAX_LEVEL + 1];
             topLevel = MAX_LEVEL;
         }
 
-        public Node(long x, int height) {
+        public Node(Long x, int height) {
             key = x;
             next = new Node[height + 1];
             topLevel = height;
         }
     }
 
-    public int find(long key, Node[] elems) {
+    public int find(Long key, Node[] elems) {
         int found = -1;
         Node pred = head;
         for (int level = MAX_LEVEL; level >= 0; level--) {
             Node curr = pred.next[level];
-            while (key > curr.key) {
+            while (key.compareTo(curr.key) > 0) {
                 pred = curr;
                 curr = pred.next[level];
             }
@@ -58,7 +58,7 @@ public class LazySkipList {
         return found;
     }
 
-    public boolean add(long x, Node[] elems) {
+    public boolean add(Long x, Node[] elems) {
         int topLevel = randomLevel();
         while (true) {
             int found = find(x, elems);
@@ -100,7 +100,7 @@ public class LazySkipList {
         }
     }
 
-    public boolean remove(long x, Node[] elems) {
+    public boolean remove(Long x, Node[] elems) {
         Node victim = null;
         boolean isMarked = false;
         int topLevel = -1;
@@ -155,11 +155,11 @@ public class LazySkipList {
         }
     }
 
-    public boolean contains(long key) {
+    public boolean contains(Long key) {
         Node pred = head;
         for (int level = MAX_LEVEL; level >= 0; level--) {
             Node curr = pred.next[level];
-            while (key > curr.key) {
+            while (key.compareTo(curr.key) > 0) {
                 pred = curr;
                 curr = pred.next[level];
             }

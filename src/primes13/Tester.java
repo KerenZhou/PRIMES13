@@ -1,75 +1,34 @@
 package primes13;
 
 import java.io.IOException;
-import java.util.AbstractSet;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.*;
 
 public class Tester {
-    private static AbstractSet<Long> jSkipList = null;
     private static LazySkipList cSkipList = null;
-    private static boolean useCSkipList = false;
-
-    private static class FindTester implements Runnable {
-        int id;
-        long element;
-        long[] iter;
-
-        public FindTester(int id, long[] iter) {
-            this.id = id;
-            this.element = id;
-            this.iter = iter;
-        }
-        
-        public void run() {
-            while (!shouldRun) ;
-            long iters = 0;
-            
-            for (; shouldRun; iters++) {
-                element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                if(useCSkipList) cSkipList.contains(element);
-                else jSkipList.contains(element);
-            }
-            iter[id] = iters;
-        }
-    }
+    private static Timer endTimer = new Timer(false);
     
-    private static class MutateTester implements Runnable {
+    public static class RunTester implements Runnable {
         int id;
         long element;
-        long[] add;
-        long[] rem;
+        long[] iters;
         RandomSource rs;
 
-        public MutateTester(int id, long[] add, long rem[]) {
+        public RunTester(int id, long[] iters) {
             this.id = id;
             this.element = id;
-            this.add = add;
-            this.rem = rem;
+            this.iters = iters;
         }
         
         public void run() {
-            int iters = 100;
-            for(int i = 0; i < iters; i++) {
-                long x = element;
-                long start = System.nanoTime();
-                for (int j = 0; j < 1000; j++) {
-                    element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                    if(useCSkipList) cSkipList.add(element);
-                    else jSkipList.add(element);
-                }
-                add[id] += (System.nanoTime() - start) / iters;
-                element = x;
-                start = System.nanoTime();
-                for (int j = 0; j < 1000; j++) {
-                    element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                    if(useCSkipList) cSkipList.remove(element);
-                    else jSkipList.remove(element);
-                }
-                rem[id] += (System.nanoTime() - start) / iters;
+            LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
+            while(!shouldRun) ;
+            long it = 0;
+            for(; shouldRun; it++) {
+                element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
+                cSkipList.add(element, elems);
+                cSkipList.remove(element, elems);
             }
+            iters[id] = it;
         }
     }
     
@@ -83,39 +42,25 @@ public class Tester {
         }
     }
     
-    public static void main(String[] args) {
-        double runTimeApprox = Double.parseDouble(args[0]);
-        int numThreads = Integer.parseInt(args[1]);
-        String className = "";
-        if(args.length > 2) className = args[2];
-        if(className.equalsIgnoreCase("stl_ts")) {
-            jSkipList = new TreeSet<Long>();
-        } else if(className.equals("stl_sl")) {
-            jSkipList = new ConcurrentSkipListSet<Long>();
+    public static double test(int elements, int size, int numThreads, double runTimeApprox) {
+        LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
+
+        RandomSource rs = new RandomSource();
+        if(size < elements) {
+            for(int i = 0; i < elements - size; i++) {
+                cSkipList.add(rs.next(), elems);
+            }
         } else {
-            cSkipList = new LazySkipList();
-            useCSkipList = true;
+            for(int i = 0; i < size - elements; i++) {
+                cSkipList.remove(rs.next(), elems);
+            }
         }
-        // Seed skiplist with starting elements
-        RandomSource rs = new RandomSource(-5);
-        
-        for(int i = 0; i < 1000000; i++) {
-            if(useCSkipList) cSkipList.add(rs.next());
-            else jSkipList.add(rs.next());
-        }
-        Timer endTimer = new Timer(false);
-        
-        try {
-            Runtime.getRuntime().exec("sudo set-cpus -n " + numThreads + " seq");
-        } catch (IOException ex) {}
-        
+
         // Initialize threads
         Thread[] workers = new Thread[numThreads];
         long[] iter = new long[numThreads];
-        long[] add = new long[numThreads];
-        long[] rem = new long[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            workers[i] = new Thread(new FindTester(i, iter));
+            workers[i] = new Thread(new RunTester(i, iter));
             workers[i].start();
         }
 
@@ -132,35 +77,65 @@ public class Tester {
             } catch (InterruptedException e) {}
         }
         
-        Thread thread = null;
-        for(int i = 0; i < numThreads; i++) {
-            thread = new Thread(new MutateTester(i, add, rem));
-            thread.start();
-        }
-        
-        try {
-            thread.join();
-        } catch (InterruptedException e) {}
-        
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {}
 
         // Get total number of iterations finished
         long totalIters = 0;
-        long addNS = 0, remNS = 0;
         for (int i = 0; i < numThreads; i++) {
             totalIters += iter[i];
-            addNS += add[i];
-            remNS += rem[i];
         }
         // Calculate rate (iterations / msec)
-        double rate_find = 1.0 * totalIters / (endTime - startTime);
-        double rate_add = 1.0 * numThreads * numThreads * 1000000000L / addNS;
-        double rate_rem = 1.0 * numThreads * numThreads * 1000000000L / remNS;
+        return 1.0 * totalIters / (endTime - startTime);
+    }
 
-        // Log data points
-        System.out.printf("%.4f,%.4f,%.4f", rate_find, rate_add, rate_rem);
+    public static void main(String[] args) {
+        double runTimeApprox = Double.parseDouble(args[0]);
+        int maxThreads = Integer.parseInt(args[1]);
+        int threadStep = Integer.parseInt(args[2]);
+        String className = "";
+        cSkipList = new LazySkipList();
+        
+        LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
+        
+        // Seed skiplist with starting elements
+        RandomSource rs = new RandomSource(-5);
+        
+        int finalElem = 10;
+        int warmupElem = 1000000;
+        for(int i = 0; i < warmupElem; i++) {
+            long next = rs.next();
+            cSkipList.add(next, elems);
+        }
+        rs = new RandomSource(-5);
+        for(int i = 0; i < warmupElem - finalElem; i++) {
+            cSkipList.remove(rs.next(), elems);
+        }
+        
+        int[] threadN = new int[maxThreads / threadStep + 1];
+        for(int i = 0; i < maxThreads / threadStep; i++) {
+            threadN[threadN.length - i - 1] = maxThreads - threadStep * i;
+        }
+        threadN[0] = 1;
+        System.out.println(Arrays.toString(threadN));
+
+        int size = 1000;
+
+        for(int numThreads : threadN) {
+            try {
+                Runtime.getRuntime().exec("sudo set-cpus -n " + numThreads + " seq");
+            } catch (IOException ex) {}
+            int numElems = 10;
+            Double[] rates = new Double[5];
+            for(int i = 0; i < 5; i++) 
+{                rates[i] = test(numElems, size, numThreads, runTimeApprox);
+                size = numElems;
+                numElems *= 10;
+            }
+            // Log data points
+            System.out.printf("%.4f,%.4f,%.4f,%.4f,%.4f\n", rates);
+        }
 
         // Stop timer so program can exit
         endTimer.purge();
