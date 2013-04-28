@@ -5,12 +5,64 @@ import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class LazySkipList {
+    private static class HackMemoryAllocator {
+        private static class NPointer {
+            Node currNode;
+            NPointer next;
+
+            public NPointer(Node n) {
+                currNode = n;
+            }
+        }
+
+        private NPointer head;
+        private NPointer tail;
+        private NPointer uHead;
+        private NPointer uTail;
+
+        public HackMemoryAllocator() {
+            tail = head = new NPointer(new Node(0));
+            for(int i = 0; i < 19; i++) {
+                tail = (tail.next = new NPointer(new Node(0)));
+            }
+        }
+
+        public Node newNode() {
+            NPointer nn = head;
+            if(uTail != null) {
+                uTail = (uTail.next = head);
+            } else {
+                uHead = uTail = head;
+            }
+            uTail.currNode = null;
+            head = head.next;
+            return nn.currNode;
+        }
+
+        public void returnNode(Node t) {
+            tail.next = uHead;
+            if(tail.next == null) tail.next = new NPointer(t);
+            else {
+                uHead = uHead.next;
+                tail.next.currNode = t;
+            }
+            tail = tail.next;
+            for(int i = 1; i <= MAX_LEVEL; i++) tail.currNode.next[i] = null;
+            tail.currNode.key = 0;
+        }
+    }
 
     static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
     final Node tail = new Node(Long.MAX_VALUE);
     private RandomSource rs = new RandomSource();
-    
+    private static final ThreadLocal<HackMemoryAllocator> nodeCache =
+        new ThreadLocal<HackMemoryAllocator>() {
+            @Override protected HackMemoryAllocator initialValue() {
+                return new HackMemoryAllocator();
+            }
+        };
+    public static boolean useAllocHack = false;
     
     public LazySkipList() {
         for (int i = 0; i < head.next.length; i++) {
@@ -19,13 +71,12 @@ public class LazySkipList {
     }
 
     public static class Node {
-
         final Lock lock = new ReentrantLock();
-        final long key;
+        long key;
         final Node next[];
         volatile boolean marked = false;
         volatile boolean fullyLinked = false;
-        private int topLevel;
+        int topLevel;
 
         public Node(long key) {
             this.key = key;
@@ -35,7 +86,7 @@ public class LazySkipList {
 
         public Node(long x, int height) {
             key = x;
-            next = new Node[height + 1];
+            next = new Node[MAX_LEVEL + 1];
             topLevel = height;
         }
     }
@@ -85,7 +136,9 @@ public class LazySkipList {
                 if (!valid) {
                     continue;
                 }
-                Node newNode = new Node(x, topLevel);
+                Node newNode;
+                if(useAllocHack) newNode = nodeCache.get().newNode();
+                else newNode = new Node(x, topLevel);
                 for (int level = 0; level <= topLevel; level++) {
                     newNode.next[level] = elems[MAX_LEVEL + 1 + level];
                     elems[level].next[level] = newNode;
@@ -141,6 +194,7 @@ public class LazySkipList {
                         elems[level].next[level] = victim.next[level];
                     }
                     victim.lock.unlock();
+                    nodeCache.get().returnNode(victim);
                     return true;
                 } finally {
                     for (int i = 0;

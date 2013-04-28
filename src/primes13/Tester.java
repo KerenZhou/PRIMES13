@@ -42,7 +42,8 @@ public class Tester {
         }
     }
     
-    public static double test(int elements, int numThreads, double runTimeApprox) {
+    public static double test(int elements, int numThreads) {
+        System.gc();
         LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
         cSkipList = new LazySkipList();
 
@@ -60,7 +61,7 @@ public class Tester {
         }
 
         // Schedule stoping time
-        endTimer.schedule(new KillTasks(), (long)(runTimeApprox * 60 * 1000));
+        endTimer.schedule(new KillTasks(), (long)(0.5 * 60 * 1000));
         // Start iteration
         shouldRun = true;
         // Mark start
@@ -81,14 +82,12 @@ public class Tester {
         for (int i = 0; i < numThreads; i++) {
             totalIters += iter[i];
         }
-        // Calculate rate (iterations / msec)
         return 1.0 * totalIters / (endTime - startTime);
     }
 
     public static void main(String[] args) {
-        double runTimeApprox = Double.parseDouble(args[0]);
-        int maxThreads = Integer.parseInt(args[1]);
-        int threadStep = Integer.parseInt(args[2]);
+        int numThreads = Integer.parseInt(args[1]);
+        int numElems = Integer.parseInt(args[2]);
         String className = "";
         cSkipList = new LazySkipList();
         
@@ -101,27 +100,12 @@ public class Tester {
         for(int i = 0; i < warmupElem; i++) {
             long next = rs.next();
             cSkipList.add(next, elems);
+            cSkipList.remove(next, elems);
         }
         
-        int[] threadN = new int[maxThreads / threadStep + 1];
-        for(int i = 0; i < maxThreads / threadStep; i++) {
-            threadN[threadN.length - i - 1] = maxThreads - threadStep * i;
-        }
-        threadN[0] = 1;
-        System.out.println(Arrays.toString(threadN));
-
-        for(int numThreads : threadN) {
-            try {
-                Runtime.getRuntime().exec("sudo set-cpus -n " + numThreads + " seq");
-            } catch (IOException ex) {}
-            int numElems = 10;
-            Double[] rates = new Double[5];
-            for(int i = 0; i < 5; i++) {
-                rates[i] = test(numElems, numThreads, runTimeApprox);
-                numElems *= 10;
-            }
-            // Log data points
-            System.out.printf("%.4f,%.4f,%.4f,%.4f,%.4f\n", rates);
+        for(int i = 0; i < 1; i++) {
+            System.out.println(numThreads + " " + numElems + " " + test(numElems, numThreads));
+            numElems *= 10;
         }
 
         // Stop timer so program can exit
