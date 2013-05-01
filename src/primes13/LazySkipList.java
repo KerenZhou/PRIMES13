@@ -29,13 +29,14 @@ public class LazySkipList {
 
         public Node newNode() {
             NPointer nn = head;
+            if(nn == null) return new Node(0);
             if(uTail != null) {
                 uTail = (uTail.next = head);
             } else {
                 uHead = uTail = head;
             }
-            uTail.currNode = null;
             head = head.next;
+            uTail.currNode = null;
             return nn.currNode;
         }
 
@@ -56,14 +57,14 @@ public class LazySkipList {
     final Node head = new Node(Long.MIN_VALUE);
     final Node tail = new Node(Long.MAX_VALUE);
     private RandomSource rs = new RandomSource();
-    private static final ThreadLocal<HackMemoryAllocator> nodeCache =
+    public final ThreadLocal<HackMemoryAllocator> nodeCache =
         new ThreadLocal<HackMemoryAllocator>() {
             @Override protected HackMemoryAllocator initialValue() {
                 return new HackMemoryAllocator();
             }
         };
     public static boolean useAllocHack = false;
-    
+
     public LazySkipList() {
         for (int i = 0; i < head.next.length; i++) {
             head.next[i] = tail;
@@ -96,6 +97,7 @@ public class LazySkipList {
         Node pred = head;
         for (int level = MAX_LEVEL; level >= 0; level--) {
             Node curr = pred.next[level];
+            if(curr == null) return -1;
             while (key > curr.key) {
                 pred = curr;
                 curr = pred.next[level];
@@ -137,14 +139,20 @@ public class LazySkipList {
                     continue;
                 }
                 Node newNode;
-                if(useAllocHack) newNode = nodeCache.get().newNode();
+                // PROBLEM LINES (next 2 lines)
+                if(useAllocHack) {
+                    newNode = nodeCache.get().newNode();
+                    newNode.key = x;
+                }
                 else newNode = new Node(x, topLevel);
+
                 for (int level = 0; level <= topLevel; level++) {
                     newNode.next[level] = elems[MAX_LEVEL + 1 + level];
                     elems[level].next[level] = newNode;
                 }
                 newNode.fullyLinked = true;
                 return true;
+            } catch(Exception ex) {
             } finally {
                 for (int level = 0; level <= highestLocked; level++) {
                     elems[level].lock.unlock();
@@ -194,8 +202,10 @@ public class LazySkipList {
                         elems[level].next[level] = victim.next[level];
                     }
                     victim.lock.unlock();
-                    nodeCache.get().returnNode(victim);
+                    // PROBLEM LINE
+                    if(useAllocHack) nodeCache.get().returnNode(victim);
                     return true;
+                } catch(Exception ex) {
                 } finally {
                     for (int i = 0;
                             i <= highestLocked;
