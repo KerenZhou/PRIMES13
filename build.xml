@@ -17,7 +17,11 @@
     <javac srcdir="${src}" destdir="${build}"/>
   </target>
 
-  <target name="dist" depends="compile" description="generate the distribution" >
+  <target name="dist" depends="compile" filesetmanifest="mergewithoutmain" description="generate the distribution" >
+    <manifest>
+      <attribute name="Main-Class" value="primes13.Tester"/>
+      <attribute name="Class-Path" value="."/>
+    </manifest>
     <!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
     <jar jarfile="PRIMES13.jar" basedir="${build}"/>
   </target>
