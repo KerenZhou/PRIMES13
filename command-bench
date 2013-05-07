@@ -1,7 +1,6 @@
 #!/home/am6/mpdev/bin/pl /bin/zsh
 
 ant
-cp dist/PRIMES13.jar . -f
 
 multiplier=0
 
