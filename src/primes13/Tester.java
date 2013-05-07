@@ -44,6 +44,10 @@ public class Tester {
     
     public static double test(int elements, int numThreads) {
         System.gc();
+        try {
+            Thread.sleep(1000L);
+        } catch(Exception ex) {
+        }
         LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
         cSkipList = new LazySkipList();
 
@@ -54,7 +58,7 @@ public class Tester {
             cSkipList.add(rs.next(), elems);
         }
 
-        LazySkipList.useAllocHack = true;
+        //LazySkipList.useAllocHack = true;
 
         // Initialize threads
         Thread[] workers = new Thread[numThreads];
@@ -63,7 +67,10 @@ public class Tester {
             workers[i] = new Thread(new RunTester(i, iter));
             workers[i].start();
         }
-
+        try {
+            Thread.sleep(1000L);
+        } catch(Exception ex) {
+        }
         // Schedule stoping time
         endTimer.schedule(new KillTasks(), (long)(0.5 * 60 * 1000));
         // Start iteration
@@ -90,6 +97,10 @@ public class Tester {
     }
 
     public static void main(String[] args) {
+        try {
+            Thread.sleep(1000L);
+        } catch(Exception ex) {
+        }
         int numThreads = Integer.parseInt(args[1]);
         int numElems = Integer.parseInt(args[2]);
         String className = "";

@@ -1,13 +1,16 @@
-#!/bin/zsh
+#!/home/am6/mpdev/bin/pl /bin/zsh
 
-cd ~/primes/PRIMES13
 ant
-cd ..
-cp PRIMES13/dist/PRIMES13.jar . -f
+cp dist/PRIMES13.jar . -f
 
-for x in 1 10 11 20 30 40 50 60 70 80; do
+for x in 1 10 20 30 40 50 60 70 80; do
     sudo =set-cpus -n $x seq > /dev/null 2>&1
-    for (( n = 1000; n <= 10000000; n = n * 10 )); do
-        pl java -Xms128G -Xmx128G -jar PRIMES13.jar 1 $x $n
+    for (( n = 10; n <= 10000000; n = n * 10 )); do
+        java -Xms128G -Xmx128G -jar PRIMES13.jar 1 $x $n
     done
 done
+
+
+TRAPEXIT() {
+	sudo =set-cpus all > /dev/null 2>&1
+}
