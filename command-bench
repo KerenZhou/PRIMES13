@@ -22,8 +22,3 @@ for (( x = 1; x <= 8; x++ )); do
         java -Xms128G -Xmx128G -jar PRIMES13.jar 1 $[x*multiplier] $n
     done
 done
-
-
-TRAPEXIT() {
-	sudo =set-cpus all > /dev/null 2>&1
-}
