@@ -37,6 +37,7 @@ public class LazySkipList {
             }
             head = head.next;
             uTail.currNode = null;
+            for(int i = 1; i <= MAX_LEVEL; i++) nn.currNode.next[i] = null;
             return nn.currNode;
         }
 
@@ -48,7 +49,6 @@ public class LazySkipList {
                 tail.next.currNode = t;
             }
             tail = tail.next;
-            for(int i = 1; i <= MAX_LEVEL; i++) tail.currNode.next[i] = null;
             tail.currNode.key = 0;
         }
     }
