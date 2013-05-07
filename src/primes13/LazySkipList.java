@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class LazySkipList {
-    private static class HackMemoryAllocator {
+    /*private static class HackMemoryAllocator {
         private static class NPointer {
             Node currNode;
             NPointer next;
@@ -51,19 +51,19 @@ public class LazySkipList {
             tail = tail.next;
             tail.currNode.key = 0;
         }
-    }
+    }*/
 
     static final int MAX_LEVEL = 32;
     final Node head = new Node(Long.MIN_VALUE);
     final Node tail = new Node(Long.MAX_VALUE);
     private RandomSource rs = new RandomSource();
-    public final ThreadLocal<HackMemoryAllocator> nodeCache =
+    /*public final ThreadLocal<HackMemoryAllocator> nodeCache =
         new ThreadLocal<HackMemoryAllocator>() {
             @Override protected HackMemoryAllocator initialValue() {
                 return new HackMemoryAllocator();
             }
         };
-    public static boolean useAllocHack = false;
+    public static boolean useAllocHack = false;*/
 
     public LazySkipList() {
         for (int i = 0; i < head.next.length; i++) {
@@ -140,11 +140,11 @@ public class LazySkipList {
                 }
                 Node newNode;
                 // PROBLEM LINES (next 2 lines)
-                if(useAllocHack) {
+                /*if(useAllocHack) {
                     newNode = nodeCache.get().newNode();
                     newNode.key = x;
                 }
-                else newNode = new Node(x, topLevel);
+                else */ newNode = new Node(x, topLevel);
 
                 for (int level = 0; level <= topLevel; level++) {
                     newNode.next[level] = elems[MAX_LEVEL + 1 + level];
@@ -203,7 +203,7 @@ public class LazySkipList {
                     }
                     victim.lock.unlock();
                     // PROBLEM LINE
-                    if(useAllocHack) nodeCache.get().returnNode(victim);
+                    // if(useAllocHack) nodeCache.get().returnNode(victim);
                     return true;
                 } catch(Exception ex) {
                 } finally {

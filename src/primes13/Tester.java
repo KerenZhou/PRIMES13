@@ -51,7 +51,7 @@ public class Tester {
         LazySkipList.Node[] elems = new LazySkipList.Node[2 * (LazySkipList.MAX_LEVEL + 1)];
         cSkipList = new LazySkipList();
 
-        LazySkipList.useAllocHack = false;
+        //LazySkipList.useAllocHack = false;
 
         RandomSource rs = new RandomSource();
         for(int i = 0; i < elements; i++) {
@@ -111,7 +111,7 @@ public class Tester {
         // Seed skiplist with starting elements
         RandomSource rs = new RandomSource(-5);
         
-        LazySkipList.useAllocHack = false;
+        //LazySkipList.useAllocHack = false;
         int warmupElem = 1000000;
         for(int i = 0; i < warmupElem; i++) {
             long next = rs.next();
