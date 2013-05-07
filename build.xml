@@ -17,7 +17,7 @@
     <javac srcdir="${src}" destdir="${build}"/>
   </target>
 
-  <target name="dist" depends="compile" filesetmanifest="mergewithoutmain" description="generate the distribution" >
+  <target name="dist" depends="compile" description="generate the distribution" >
     <manifest>
       <attribute name="Main-Class" value="primes13.Tester"/>
       <attribute name="Class-Path" value="."/>
