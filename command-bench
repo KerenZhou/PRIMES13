@@ -12,13 +12,13 @@ fi
 
 sudo =set-cpus -n 1 seq > /dev/null 2>&1
 for (( n = 10; n <= 10000000; n = n * 10 )); do
-    java -Xms128G -Xmx128G -jar PRIMES13.jar 1 1 $n
+    java -Xms128G -Xmx128G -jar PRIMES13.jar 1 $n $2
 done
 
 
 for (( x = 1; x <= 8; x++ )); do
     sudo =set-cpus -n $[x*multiplier] seq > /dev/null 2>&1
     for (( n = 10; n <= 10000000; n = n * 10 )); do
-        java -Xms128G -Xmx128G -jar PRIMES13.jar 1 $[x*multiplier] $n
+        java -XX:+UseG1GC -Xms128G -Xmx128G -jar PRIMES13.jar $[x*multiplier] $n $2
     done
 done

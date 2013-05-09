@@ -11,12 +11,13 @@ public class Tester {
         int id;
         long element;
         long[] iters;
-        RandomSource rs;
+        boolean testType1;
 
-        public RunTester(int id, long[] iters) {
+        public RunTester(int id, long[] iters, boolean testType1) {
             this.id = id;
             this.element = id;
             this.iters = iters;
+            this.testType1 = testType1;
         }
         
         public void run() {
@@ -25,8 +26,12 @@ public class Tester {
             long it = 0;
             for(; shouldRun; it++) {
                 element = (1103515245L * element + 12345L) & (RandomSource.m - 1);
-                cSkipList.add(element, elems);
-                cSkipList.remove(element, elems);
+                if(testType1) {
+                    cSkipList.add(element, elems);
+                    cSkipList.remove(element, elems);
+                } else {
+                    cSkipList.contains(element);
+                }
             }
             iters[id] = it;
         }
@@ -42,7 +47,7 @@ public class Tester {
         }
     }
     
-    public static double test(int elements, int numThreads) {
+    public static double test(int elements, int numThreads, boolean testType1) {
         System.gc();
         try {
             Thread.sleep(1000L);
@@ -64,13 +69,14 @@ public class Tester {
         Thread[] workers = new Thread[numThreads];
         long[] iter = new long[numThreads];
         for (int i = 0; i < numThreads; i++) {
-            workers[i] = new Thread(new RunTester(i, iter));
+            workers[i] = new Thread(new RunTester(i, iter, testType1));
             workers[i].start();
         }
         try {
             Thread.sleep(1000L);
         } catch(Exception ex) {
         }
+        /* Add/Remove testing */
         // Schedule stoping time
         endTimer.schedule(new KillTasks(), (long)(0.5 * 60 * 1000));
         // Start iteration
@@ -87,13 +93,12 @@ public class Tester {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {}
-
         // Get total number of iterations finished
         long totalIters = 0;
         for (int i = 0; i < numThreads; i++) {
             totalIters += iter[i];
         }
-        return 1.0 * totalIters / (endTime - startTime);
+        System.out.println(numThreads + " " + numElems + " " + 1.0 * totalIters / (endTime - startTime));
     }
 
     public static void main(String[] args) {
@@ -101,8 +106,9 @@ public class Tester {
             Thread.sleep(1000L);
         } catch(Exception ex) {
         }
-        int numThreads = Integer.parseInt(args[1]);
-        int numElems = Integer.parseInt(args[2]);
+        int numThreads = Integer.parseInt(args[0]);
+        int numElems = Integer.parseInt(args[1]);
+        boolean testType1 = args[2].equalsIgnoreCase("1");
         String className = "";
         cSkipList = new LazySkipList();
         
@@ -119,10 +125,7 @@ public class Tester {
             cSkipList.remove(next, elems);
         }
         
-        for(int i = 0; i < 1; i++) {
-            System.out.println(numThreads + " " + numElems + " " + test(numElems, numThreads));
-            numElems *= 10;
-        }
+        test(numElems, numThreads));
 
         // Stop timer so program can exit
         endTimer.purge();
