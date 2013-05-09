@@ -47,7 +47,7 @@ public class Tester {
         }
     }
     
-    public static double test(int elements, int numThreads, boolean testType1) {
+    public static void test(int elements, int numThreads, boolean testType1) {
         System.gc();
         try {
             Thread.sleep(1000L);
@@ -98,7 +98,7 @@ public class Tester {
         for (int i = 0; i < numThreads; i++) {
             totalIters += iter[i];
         }
-        System.out.println(numThreads + " " + numElems + " " + 1.0 * totalIters / (endTime - startTime));
+        System.out.println(numThreads + " " + elements + " " + 1.0 * totalIters / (endTime - startTime));
     }
 
     public static void main(String[] args) {
