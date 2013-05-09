@@ -125,7 +125,7 @@ public class Tester {
             cSkipList.remove(next, elems);
         }
         
-        test(numElems, numThreads));
+        test(numElems, numThreads);
 
         // Stop timer so program can exit
         endTimer.purge();
